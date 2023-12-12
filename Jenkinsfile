@@ -5,7 +5,7 @@ pipeline {
         stage('VeraCode SCA Analysis') {
             steps {
                 script {
-                    sh "curl -sSL https://download.sourceclear.com/ci.sh | sh"
+                    sh "curl -sSL https://download.sourceclear.com/ci.sh | sh | grep -o 'https://[^ ]*' | xargs -I {} sed 's#{{vc_sca_report_html}}#{}#g' report.html > temp_file && mv temp_file report.html"
                 }
             }
         }
@@ -17,6 +17,14 @@ pipeline {
                         sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=Example-Java -Dsonar.projectName='Example-Java'"
                     }
                 }
+            }
+        }
+    }
+
+    post {
+        always {
+            script {
+                archiveArtifacts artifacts: 'report.html', fingerprint: true
             }
         }
     }
